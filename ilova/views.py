@@ -86,8 +86,6 @@ from django.shortcuts import render, get_object_or_404
 env = environ.Env()
 
 
-env = environ.Env()
-
 
 class FakePaymentView(LoginRequiredMixin, View):
     def get(self, request, order_id):
@@ -109,10 +107,8 @@ class FakePaymentView(LoginRequiredMixin, View):
 
     def post(self, request, order_id):
         order = get_object_or_404(Order, id=order_id, user=request.user)
-
         if order.status == 'PAID':
             return redirect('my_tickets')
-
         try:
             confirm_fake_payment_service(order.id)
         except ValidationError as e:
@@ -125,7 +121,6 @@ class FakePaymentView(LoginRequiredMixin, View):
             })
         except Order.DoesNotExist:
             return redirect('home')
-
         return redirect('my_tickets')
 
 
