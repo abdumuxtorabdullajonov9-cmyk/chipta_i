@@ -86,18 +86,47 @@ from django.shortcuts import render, get_object_or_404
 env = environ.Env()
 
 
+env = environ.Env()
+
+
 class FakePaymentView(LoginRequiredMixin, View):
     def get(self, request, order_id):
         order = get_object_or_404(Order, id=order_id, user=request.user)
 
-        real_bank_url = env('YOUR_REAL_BANK_P2P_URL')
+        if order.is_expired():
+            order.status = 'EXPIRED'
+            order.save()
+
+        real_bank_url = env('YOUR_REAL_BANK_P2P_URL', default='')
 
         context = {
             'amount': order.total_amount,
             'order_id': order.id,
-            'bank_url': real_bank_url
+            'bank_url': real_bank_url,
+            'order': order,
         }
         return render(request, 'fake_payment.html', context)
+
+    def post(self, request, order_id):
+        order = get_object_or_404(Order, id=order_id, user=request.user)
+
+        if order.status == 'PAID':
+            return redirect('my_tickets')
+
+        try:
+            confirm_fake_payment_service(order.id)
+        except ValidationError as e:
+            return render(request, 'fake_payment.html', {
+                'amount': order.total_amount,
+                'order_id': order.id,
+                'bank_url': env('YOUR_REAL_BANK_P2P_URL', default=''),
+                'order': order,
+                'error': str(e.detail[0]) if hasattr(e, 'detail') else str(e),
+            })
+        except Order.DoesNotExist:
+            return redirect('home')
+
+        return redirect('my_tickets')
 
 
 class MyTicketsView(LoginRequiredMixin, ListView):

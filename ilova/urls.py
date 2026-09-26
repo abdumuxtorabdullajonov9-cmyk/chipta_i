@@ -6,6 +6,7 @@ from .views import (
     ReserveSeatView,
     DownloadTicketPDFView,
     EventSeatListView,
+    CheckTicketQRAPIView,
 )
 
 urlpatterns = [
@@ -14,6 +15,7 @@ urlpatterns = [
     path('admin-dashboard/groups/config/', AdminSectorGroupConfigView.as_view(), name='admin_groups_config'),
     path('tickets/<uuid:ticket_uid>/download-pdf/', DownloadTicketPDFView.as_view(), name='download_ticket_pdf'),
     path('tickets/reserve/', ReserveSeatView.as_view(), name='ticket_reserve'),
+    path('tickets/check-qr/', CheckTicketQRAPIView.as_view(), name='check_ticket_qr'),
     path('events/<int:event_id>/sectors/<int:sector_number>/seats/', EventSeatListView.as_view(),
          name='event_sector_seats'),
 ]
