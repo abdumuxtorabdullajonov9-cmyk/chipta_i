@@ -307,17 +307,18 @@ class DownloadTicketPDFView(LoginRequiredMixin, View):
 
             return HttpResponse("❌ PDF fayl generatsiya qilishda xatolik yuz berdi.", status=400)
 
+
 class AdminDashboardView(LoginRequiredMixin, UserPassesTestMixin, TemplateView):
-        template_name = 'dashboard.html'
+    template_name = 'dashboard.html'
 
-        def test_func(self):
-            return self.request.user.is_authenticated and (self.request.user.is_staff or self.request.user.is_superuser)
+    def test_func(self):
+        return self.request.user.is_authenticated and self.request.user.is_superuser
 
-        def handle_no_permission(self):
-            if self.request.user.is_authenticated:
-                return redirect('/?error=Sizda_admin_panelga_kirish_huquqi_yoq')
+    def handle_no_permission(self):
+        if self.request.user.is_authenticated:
+            return redirect('/?error=Sizda_admin_panelga_kirish_huquqi_yoq')
 
-            return redirect('/auth/login/?next=/dashboard/')
+        return redirect('/auth/login/?next=/dashboard/')
 
 
 
