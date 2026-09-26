@@ -83,7 +83,7 @@ WSGI_APPLICATION = 'chipta_uz.wsgi.application'
 # .env ichidagi DATABASE_URL mavjud bo'lsa uni oladi (Render drayveri uchun eng oliy standart)
 DATABASES = {
     'default': dj_database_url.config(
-        default=env('DATABASE_URL', default=f"postgres://{env('DB_USER')}:{env('DB_PASSWORD')}@{env('DB_HOST')}:{env('DB_PORT')}/{env('DB_NAME')}")
+        default=env('DATABASE_URL', default='postgres://postgres:postgres@localhost:5432/chipta_db')
     )
 }
 
