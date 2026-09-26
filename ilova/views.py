@@ -86,7 +86,6 @@ from django.shortcuts import render, get_object_or_404
 env = environ.Env()
 
 
-
 class FakePaymentView(LoginRequiredMixin, View):
     def get(self, request, order_id):
         order = get_object_or_404(Order, id=order_id, user=request.user)
@@ -117,7 +116,7 @@ class FakePaymentView(LoginRequiredMixin, View):
                 'order_id': order.id,
                 'bank_url': env('YOUR_REAL_BANK_P2P_URL', default=''),
                 'order': order,
-                'error': str(e.detail[0]) if hasattr(e, 'detail') else str(e),
+                'error': str(e.detail) if hasattr(e, 'detail') else str(e),
             })
         except Order.DoesNotExist:
             return redirect('home')
