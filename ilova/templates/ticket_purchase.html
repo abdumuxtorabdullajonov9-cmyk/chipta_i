@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Istiqlol Stadium — Haqiqiy O'rindiqlar Tanlovi</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #0A0F1D; color: #F8FAFC; min-height: 100vh; display: flex; overflow: hidden; }
+
+        .sidebar { width: 320px; min-width: 320px; background-color: #131B2E; border-right: 1px solid #1E293B; padding: 24px; display: flex; flex-direction: column; justify-content: space-between; z-index: 10; box-shadow: 10px 0 30px rgba(0,0,0,0.5); }
+        .logo-box { display: flex; align-items: center; gap: 8px; margin-bottom: 24px; }
+        .logo-title { font-size: 18px; font-weight: 900; color: #FACC15; letter-spacing: 0.5px; text-transform: uppercase; }
+
+        .info-box { background-color: rgba(10, 15, 29, 0.5); padding: 16px; border-radius: 12px; border: 1px solid #1E293B; margin-bottom: 20px; }
+        .info-label { font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase; display: block; margin-bottom: 4px; }
+        .info-value { font-size: 14px; font-weight: 800; color: #E2E8F0; }
+
+        .stat-card { background-color: #0A0F1D; border: 1px solid #1E293B; padding: 14px; border-radius: 10px; margin-bottom: 12px; }
+        .stat-label { font-size: 10px; font-weight: 700; text-transform: uppercase; color: #64748B; letter-spacing: 1px; }
+        .stat-value { font-size: 20px; font-weight: 900; color: #FACC15; margin-top: 2px; }
+
+        .flex-stats { display: flex; gap: 12px; margin-bottom: 16px; }
+        .flex-stats .stat-card { flex: 1; margin-bottom: 0; }
+        .text-emerald { color: #34D399 !important; }
+
+        .book-btn { width: 100%; background-color: #FACC15; color: #0A0F1D; font-weight: 800; padding: 16px; border: none; border-radius: 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 15px rgba(250, 204, 21, 0.15); }
+        .book-btn:hover:not(:disabled) { background-color: #EAB308; transform: translateY(-1px); box-shadow: 0 6px 20px rgba(250, 204, 21, 0.25); }
+        .book-btn:disabled { background-color: #1E293B; color: #475569; cursor: not-allowed; box-shadow: none; transform: none; }
+
+        .canvas-container { flex: 1; position: relative; height: 100vh; width: 100%; display: flex; justify-content: center; align-items: center; background: radial-gradient(circle at center, #111827 0%, #070a13 100%); }
+        canvas { display: block; width: 100%; height: 100%; }
+
+        .fps-badge { position: absolute; top: 16px; right: 16px; background-color: rgba(19, 27, 46, 0.8); border: 1px solid #1E293B; padding: 6px 12px; border-radius: 8px; font-family: monospace; font-size: 11px; color: #94A3B8; z-index: 5; pointer-events: none; }
+        #timer-box { background-color: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.2); padding: 12px; border-radius: 10px; margin-bottom: 16px; display: none; }
+        .tip-text { font-size: 11px; color: #64748B; margin-bottom: 16px; display: flex; gap: 6px; line-height: 1.4; }
+
+        .back-stadium-btn { position: absolute; top: 16px; left: 16px; background-color: #131B2E; border: 1px solid #1E293B; color: #FACC15; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; display: none; z-index: 6; }
+        .back-stadium-btn:hover { background-color: #1E293B; }
+    </style>
+</head>
+<body data-event-id="{{ event.id }}">
+    {% csrf_token %}
+
+    <div class="sidebar">
+        <div>
+            <div class="logo-box">
+                <span>⚽</span>
+                <h1 class="logo-title">Istiqlol 3D Arena</h1>
+            </div>
+
+            <div id="timer-box">
+                <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: bold; color: #FACC15;">
+                    <span>⏳ Zaxira vaqti:</span>
+                    <span id="countdown-clock" style="font-family: monospace;">10:00</span>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <span class="info-label">Uchrashuv:</span>
+                <p class="info-value">{{ event.title }}</p>
+            </div>
+
+            <div class="stat-card">
+                <span class="stat-label">🎯 Tanlangan O'rindiq</span>
+                <div class="stat-value" id="selected-sector-title" style="font-size: 16px;">Sektorni tanlang</div>
+            </div>
+
+            <div class="flex-stats">
+                <div class="stat-card">
+                    <span class="stat-label">Holat</span>
+                    <div class="stat-value text-emerald" id="available-seats-text" style="font-size: 14px; margin-top: 4px;">Sektor yopiq</div>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-label">Chipta narxi</span>
+                    <div class="stat-value" id="cart-summary" style="font-size: 14px; margin-top: 6px; color: #E2E8F0;">0 UZS</div>
+                </div>
+            </div>
+        </div>
+
+        <div>
+            <div class="tip-text">
+                <span>💡</span>
+                <span id="tip-display-text">Sichqoncha yordamida stadionni burang. Sektor ustiga bosib, ichki o'rindiqlar rejasiga o'ting.</span>
+            </div>
+            <button class="book-btn" id="book-btn" disabled onclick="checkoutOrder()">
+                🎫 To'lov sahifasiga o'tish
+            </button>
+        </div>
+    </div>
+
+    <div class="canvas-container" id="canvas-container">
+        <button class="back-stadium-btn" id="back-stadium-btn" onclick="backToStadiumView()">↩️ Umumiy xaritaga qaytish</button>
+        <div class="fps-badge" id="view-mode-badge">🏟️ Umumiy 3D ko'rinish</div>
+        <canvas id="stadiumCanvas"></canvas>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('stadiumCanvas');
+        const ctx = canvas.getContext('2d');
+        const container = document.getElementById('canvas-container');
+
+
+        const EVENT_ID = document.body.dataset.eventId;
+
+        function getCsrfToken() {
+            const input = document.querySelector('[name=csrfmiddlewaretoken]');
+            return input ? input.value : '';
+        }
+
+        let viewMode = 'STADIUM';
+        let selectedSectorNum = null;
+        let selectedSeatCoords = null;
+        let selectedEventSeatId = null;
+        let isLoadingSeats = false;
+
+        function resizeCanvas() {
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
+        resizeCanvas();
+
+        let rotationAngle = 0.6;
+        let pitchAngle = 0.55;
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+
+        const sectors = [];
+        for (let i = 1; i <= 32; i++) {
+            sectors.push({
+                number: i,
+                startAngle: ((i - 1) / 32) * Math.PI * 2,
+                endAngle: (i / 32) * Math.PI * 2
+            });
+        }
+
+        let sectorSeatsData = [];
+
+        async function fetchSeatsForSector(sectorNumber) {
+            isLoadingSeats = true;
+            document.getElementById('tip-display-text').innerText = "⏳ Joylar bazadan yuklanmoqda...";
+            try {
+                const response = await fetch(`/api/events/${EVENT_ID}/sectors/${sectorNumber}/seats/`);
+                if (!response.ok) {
+                    throw new Error("Sektor ma'lumotlarini yuklab bo'lmadi.");
+                }
+                const seats = await response.json();
+                sectorSeatsData = seats.map(s => ({
+                    id: s.id,
+                    row: s.row_number,
+                    seat: s.seat_number,
+                    price: parseFloat(s.price),
+                    isTaken: s.status !== 'AVAILABLE',
+                }));
+                const availableCount = sectorSeatsData.filter(s => !s.isTaken).length;
+                document.getElementById('available-seats-text').innerText = `🟩 ${availableCount} ta bo'sh`;
+                document.getElementById('tip-display-text').innerText = "O'zingiz xohlagan bo'sh yashil o'rindiqni bosing. Qizil o'rindiqlar allaqachon band/sotilgan.";
+            } catch (err) {
+                sectorSeatsData = [];
+                document.getElementById('tip-display-text').innerText = `❌ ${err.message}`;
+            } finally {
+                isLoadingSeats = false;
+            }
+        }
+
+        function drawScene() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const baseScale = Math.min(canvas.width, canvas.height) * 0.012;
+
+            if (viewMode === 'STADIUM') {
+                canvas.style.cursor = isDragging ? 'grabbing' : 'grab';
+
+                ctx.save();
+                ctx.translate(centerX, centerY + 20);
+                const fieldW = 28 * baseScale;
+                const fieldH = 17 * baseScale * Math.sin(pitchAngle);
+                ctx.fillStyle = '#065F46';
+                ctx.beginPath(); ctx.ellipse(0, 0, fieldW, fieldH, 0, 0, Math.PI * 2); ctx.fill();
+                ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.beginPath(); ctx.ellipse(0, 0, fieldW, fieldH, 0, 0, Math.PI * 2); ctx.stroke();
+                ctx.beginPath(); ctx.moveTo(-fieldW, 0); ctx.lineTo(fieldW, 0); ctx.stroke();
+                ctx.beginPath(); ctx.ellipse(0, 0, fieldW * 0.25, fieldH * 0.25, 0, 0, Math.PI * 2); ctx.stroke();
+                ctx.restore();
+
+                const innerRadiusX = 34 * baseScale;
+                const innerRadiusY = 22 * baseScale * Math.sin(pitchAngle);
+                const outerRadiusX = 46 * baseScale;
+                const outerRadiusY = 30 * baseScale * Math.sin(pitchAngle);
+
+                sectors.forEach(s => {
+                    const sAngle = s.startAngle + rotationAngle;
+                    const eAngle = s.endAngle + rotationAngle;
+                    const midAngle = (sAngle + eAngle) / 2;
+
+                    const x1 = centerX + Math.cos(sAngle) * innerRadiusX;
+                    const y1 = centerY + 20 + Math.sin(sAngle) * innerRadiusY;
+                    const x2 = centerX + Math.cos(eAngle) * innerRadiusX;
+                    const y2 = centerY + 20 + Math.sin(eAngle) * innerRadiusY;
+                    const x3 = centerX + Math.cos(eAngle) * outerRadiusX;
+                    const y3 = centerY + 20 + Math.sin(eAngle) * outerRadiusY;
+                    const x4 = centerX + Math.cos(sAngle) * outerRadiusX;
+                    const y4 = centerY + 20 + Math.sin(sAngle) * outerRadiusY;
+
+                s.poly = [{x: x1, y: y1}, {x: x2, y: y2}, {x: x3, y: y3}, {x: x4, y: y4}];
+                s.textX = centerX + Math.cos(midAngle) * ((innerRadiusX + outerRadiusX) / 2);
+                s.textY = centerY + 20 + Math.sin(midAngle) * ((innerRadiusY + outerRadiusY) / 2);
+
+                ctx.save();
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineTo(x3, y3);
+                ctx.lineTo(x4, y4);
+                ctx.closePath();
+
+                if (s.number === selectedSectorNum) {
+                    ctx.fillStyle = 'rgba(250, 204, 21, 0.85)';
+                    ctx.strokeStyle = '#FACC15';
+                    ctx.lineWidth = 2;
+                } else {
+                    if (s.number <= 8) ctx.fillStyle = 'rgba(30, 41, 59, 0.75)';
+                    else if (s.number <= 16) ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+                    else if (s.number <= 24) ctx.fillStyle = 'rgba(30, 41, 59, 0.75)';
+                    else ctx.fillStyle = 'rgba(15, 23, 42, 0.8)';
+                    ctx.strokeStyle = '#1E293B';
+                    ctx.lineWidth = 1;
+                }
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = s.number === selectedSectorNum ? '#0A0F1D' : '#94A3B8';
+                ctx.font = `bold ${Math.max(10, Math.floor(baseScale * 0.95))}px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(s.number, s.textX, s.textY);
+                ctx.restore();
+            });
+
+                    } else if (viewMode === 'SECTOR') {
+            canvas.style.cursor = 'default';
+
+            const startX = centerX - (12.5 * 20);
+            const startY = centerY - (12.5 * 20) + 20;
+
+            ctx.save();
+            ctx.shadowColor = '#FACC15';
+            ctx.shadowBlur = 15;
+            ctx.fillStyle = '#FACC15';
+            ctx.font = 'bold 26px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${selectedSectorNum}-SEKTOR O'RINDIQLAR REJASI`, centerX, startY - 45);
+            ctx.restore();
+
+            ctx.save();
+            ctx.fillStyle = '#475569';
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('▼ YAShIL MAYDON TARAF (SAHNA)', centerX, startY + (25 * 20) + 25);
+            ctx.restore();
+
+            sectorSeatsData.forEach(seat => {
+                const visualRowIndex = 25 - seat.row;
+                const x = startX + (seat.seat - 1) * 20;
+                const y = startY + visualRowIndex * 20;
+                const radius = 7;
+
+                seat.canvasX = x;
+                seat.canvasY = y;
+                seat.radius = radius;
+
+                ctx.save();
+                ctx.beginPath();
+
+                ctx.arc(x + 8, y + 8, radius, 0, Math.PI * 2);
+
+                if (seat.isTaken) {
+                    ctx.fillStyle = '#270811';
+                    ctx.strokeStyle = '#631019';
+                    ctx.lineWidth = 1;
+                } else if (selectedSeatCoords && selectedSeatCoords.row === seat.row && selectedSeatCoords.seat === seat.seat) {
+                    ctx.shadowColor = '#FFFFFF';
+                    ctx.shadowBlur = 20;
+                    ctx.fillStyle = '#FACC15';
+                    ctx.strokeStyle = '#FFFFFF';
+                    ctx.lineWidth = 2;
+                } else {
+                    if (seat.row <= 5) {
+                        ctx.shadowColor = '#38BDF8';
+                        ctx.shadowBlur = 4;
+                        ctx.fillStyle = '#0369A1';
+                        ctx.strokeStyle = '#38BDF8';
+                    } else {
+                        ctx.shadowColor = '#10B981';
+                        ctx.shadowBlur = 4;
+                        ctx.fillStyle = '#065F46';
+                        ctx.strokeStyle = '#34D399';
+                    }
+                    ctx.lineWidth = 1.5;
+                }
+
+                ctx.fill();
+                ctx.stroke();
+                ctx.restore();
+
+                if (seat.seat === 1) {
+                    ctx.save();
+                    ctx.fillStyle = '#475569';
+                    ctx.font = 'bold 10px monospace';
+                    ctx.textAlign = 'right';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(`${seat.row}-qt`, startX - 12, y + 8);
+                    ctx.restore();
+                }
+
+                if (seat.row === 25 && seat.seat % 2 === 1) {
+                    ctx.save();
+                    ctx.fillStyle = '#475569';
+                    ctx.font = 'bold 10px monospace';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(seat.seat, x + 8, startY - 12);
+                    ctx.restore();
+                }
+            });
+        }
+        }
+
+        function isPointInPoly(pt, poly) {
+            let j = poly.length - 1;
+            let c = false;
+            for (let i = 0; i < poly.length; i++) {
+                if (((poly[i].y > pt.y) !== (poly[j].y > pt.y)) &&
+                    (pt.x < (poly[j].x - poly[i].x) * (pt.y - poly[i].y) / (poly[j].y - poly[i].y) + poly[i].x)) {
+                    c = !c;
+                }
+                j = i;
+            }
+            return c;
+        }
+
+        canvas.addEventListener('mousedown', (e) => {
+            if (viewMode !== 'STADIUM') return;
+            isDragging = true;
+            previousMousePosition = { x: e.clientX, y: e.clientY };
+        });
+
+        window.addEventListener('mouseup', () => { isDragging = false; });
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (viewMode !== 'STADIUM' || !isDragging) return;
+            const deltaX = e.clientX - previousMousePosition.x;
+            const deltaY = e.clientY - previousMousePosition.y;
+            rotationAngle += deltaX * 0.006;
+            pitchAngle = Math.max(0.35, Math.min(0.85, pitchAngle + deltaY * 0.003));
+            previousMousePosition = { x: e.clientX, y: e.clientY };
+            drawScene();
+        });
+
+        canvas.addEventListener('click', async (e) => {
+            if (isDragging || isLoadingSeats) return;
+            const rect = canvas.getBoundingClientRect();
+            const clickX = e.clientX - rect.left;
+            const clickY = e.clientY - rect.top;
+
+            if (viewMode === 'STADIUM') {
+                for (const s of sectors) {
+                    if (s.poly && isPointInPoly({x: clickX, y: clickY}, s.poly)) {
+                        selectedSectorNum = s.number;
+
+                        viewMode = 'SECTOR';
+                        document.getElementById('view-mode-badge').innerText = `🎫 Ichki xarita: ${s.number}-sektor`;
+                        document.getElementById('back-stadium-btn').style.display = 'block';
+
+                        await fetchSeatsForSector(s.number);
+                        drawScene();
+                        break;
+                    }
+                }
+            } else if (viewMode === 'SECTOR') {
+                sectorSeatsData.forEach(seat => {
+                    const dist = Math.sqrt((clickX - (seat.canvasX + 8)) ** 2 + (clickY - (seat.canvasY + 8)) ** 2);
+
+                    if (dist <= seat.radius + 3) {
+                        if (seat.isTaken) {
+                            alert("❌ Bu o'rindiq allaqachon band yoki sotilgan! Iltimos, boshqa bo'sh joy tanlang.");
+                            return;
+                        }
+
+                        selectedSeatCoords = { row: seat.row, seat: seat.seat };
+                        selectedEventSeatId = seat.id;
+
+                        document.getElementById('selected-sector-title').innerText = `${selectedSectorNum}-sektor, ${seat.row}-qator, ${seat.seat}-joy`;
+                        document.getElementById('cart-summary').innerText = `${seat.price.toLocaleString()} UZS`;
+                        document.getElementById('available-seats-text').innerText = "🟩 TANLANDI";
+                        document.getElementById('book-btn').disabled = false;
+
+                        drawScene();
+                    }
+                });
+            }
+        });
+
+        function backToStadiumView() {
+            viewMode = 'STADIUM';
+            selectedSeatCoords = null;
+            selectedEventSeatId = null;
+            if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+            document.getElementById('timer-box').style.display = 'none';
+            document.getElementById('view-mode-badge').innerText = "🏟️ Umumiy 3D ko'rinish";
+            document.getElementById('back-stadium-btn').style.display = 'none';
+            document.getElementById('selected-sector-title').innerText = "Sektorni tanlang";
+            document.getElementById('cart-summary').innerText = "0 UZS";
+            document.getElementById('available-seats-text').innerText = "Sektor yopiq";
+            document.getElementById('book-btn').disabled = true;
+            document.getElementById('tip-display-text').innerText = "Sichqoncha yordamida stadionni burang. Sektor ustiga bosib, ichki o'rindiqlar rejasiga o'ting.";
+            drawScene();
+        }
+
+        let timerInterval = null;
+        function startReservationTimer() {
+            if (timerInterval) clearInterval(timerInterval);
+            let timeRemaining = 600;
+            timerInterval = setInterval(() => {
+                let mins = Math.floor(timeRemaining / 60);
+                let secs = timeRemaining % 60;
+                document.getElementById('countdown-clock').innerText = `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+                if (timeRemaining <= 0) {
+                    clearInterval(timerInterval);
+                    alert("⚠️ Vaqt tugadi! Zaxira muddati tugadi.");
+                    backToStadiumView();
+                }
+                timeRemaining--;
+            }, 1000);
+        }
+
+
+        async function checkoutOrder() {
+            if (!selectedEventSeatId) {
+                alert("Iltimos, avval bo'sh o'rindiq tanlang.");
+                return;
+            }
+            const btn = document.getElementById('book-btn');
+            btn.disabled = true;
+            btn.innerText = "⏳ Joy zaxiraga olinmoqda...";
+
+            try {
+                const response = await fetch('/api/tickets/reserve/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken(),
+                    },
+                    body: JSON.stringify({ event_seat_ids: [selectedEventSeatId] }),
+                });
+                const data = await response.json();
+
+                if (!response.ok) {
+                    alert(`❌ ${data.error || "Joyni zaxiraga olishda xatolik yuz berdi."}`);
+                    btn.disabled = false;
+                    btn.innerText = "🎫 To'lov sahifasiga o'tish";
+                    if (selectedSectorNum) {
+                        await fetchSeatsForSector(selectedSectorNum);
+                        drawScene();
+                    }
+                    return;
+                }
+
+                window.location.href = `/orders/pay-fake/${data.order_id}/`;
+            } catch (err) {
+                alert(`❌ Tarmoq xatoligi: ${err.message}`);
+                btn.disabled = false;
+                btn.innerText = "🎫 To'lov sahifasiga o'tish";
+            }
+        }
+
+
+        window.addEventListener('resize', () => {
+            resizeCanvas();
+            drawScene();
+        });
+
+        drawScene();
+    </script>
+</body>
+</html>

@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Elektron Futbol Chiptasi</title>
+    <style>
+        @page { size: A5 landscape; margin: 8mm; }
+
+        body {
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            background-color: #0A0F1D;
+            color: #FFFFFF;
+            padding: 0;
+            margin: 0;
+        }
+
+        .ticket-container {
+            border: 3px dashed #FACC15;
+            background-color: #131B2E;
+            padding: 24px;
+        }
+
+        .header-title {
+            font-size: 22px;
+            font-weight: bold;
+            color: #FACC15;
+            text-align: center;
+            text-transform: uppercase;
+            margin-bottom: 15px;
+        }
+
+        .match-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #FFFFFF;
+            margin-bottom: 5px;
+        }
+
+        .match-date {
+            font-size: 12px;
+            color: #94A3B8;
+            margin-bottom: 15px;
+        }
+
+        .coords-table {
+            width: 100%;
+            background-color: #0A0F1D;
+            border: 1px solid #1E293B;
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .coords-table th {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #64748B;
+            padding: 8px 0;
+            font-weight: bold;
+        }
+
+        .coords-table td {
+            font-size: 22px;
+            font-weight: 900;
+            color: #FFFFFF;
+            padding: 6px 0;
+        }
+
+        .yellow-text {
+            color: #FACC15 !important;
+        }
+
+        .footer-note {
+            font-size: 10px;
+            color: #475569;
+            text-align: center;
+            border-top: 1px solid #1E293B;
+            padding-top: 10px;
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+
+        .uid-text {
+            color: #64748B;
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="ticket-container">
+        <div class="header-title">ISTIQLOL STADIUM OFFICIAL TICKET</div>
+
+        <div class="match-title">{{ event.title }}</div>
+        <div class="match-date">O'yin vaqti: {{ event.date|date:"Y-m-d H:i" }}</div>
+
+        <table class="coords-table">
+            <tr>
+                <th>Sektor</th>
+                <th>Qator</th>
+                <th>O'rindiq</th>
+            </tr>
+            <tr>
+                <td class="yellow-text">{{ sector.name }}</td>
+                <td>{{ seat.row_number }}</td>
+                <td>{{ seat.seat_number }}</td>
+            </tr>
+        </table>
+
+
+        <div style="text-align: center; margin: 10px 0;">
+            {% if ticket.qr_code_image %}
+                <img src="{{ ticket.qr_code_image.path }}" style="width: 120px; height: 120px;">
+            {% endif %}
+        </div>
+
+        <div class="footer-note">
+            <span class="uid-text">CHIPTA UUID: {{ ticket.ticket_uid }}</span><br>
+            DIQQAT: Stadion kirish eshigida nazoratchiga chiptadagi QR-kodni skanerlash uchun ko'rsating. <br>
+            Ushbu elektron chipta faqat bir marta (1 ta) kirish huquqini beradi. Qayta kirish qat'iyan taqiqlanadi!
+        </div>
+    </div>
+
+</body>
+</html>

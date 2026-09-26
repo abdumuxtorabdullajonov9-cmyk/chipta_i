@@ -1,0 +1,73 @@
+{% load socialaccount %}
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Istiqlol Stadium — Ro'yxatdan O'tish</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #0A0F1D; color: #F8FAFC; min-height: 100vh; display: flex; items-center: center; justify-content: center; padding: 20px; align-items: center; }
+        .login-card { background-color: #131B2E; border: 1px solid #1E293B; padding: 32px; border-radius: 16px; width: 100%; max-width: 380px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); text-align: center; }
+        .logo { font-size: 36px; margin-bottom: 8px; display: block; }
+        h2 { font-size: 20px; font-weight: 800; color: #FACC15; }
+        .subtitle { font-size: 12px; color: #94A3B8; margin-top: 4px; margin-bottom: 24px; }
+        .form-group { text-align: left; margin-bottom: 16px; }
+        label { display: block; font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 6px; }
+        input { width: 100%; background-color: #0A0F1D; border: 1px solid #1E293B; border-radius: 10px; padding: 12px 16px; color: white; font-size: 14px; transition: border-color 0.2s; }
+        input:focus { outline: none; border-color: #FACC15; }
+        .submit-btn { width: 100%; background-color: #FACC15; color: #0A0F1D; font-weight: 700; padding: 12px; border: none; border-radius: 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; transition: background-color 0.2s; margin-top: 8px; }
+        .submit-btn:hover { background-color: #EAB308; }
+        .google-btn { width: 100%; background-color: #FFFFFF; color: #1F2937; font-weight: 600; padding: 12px; border: 1px solid #E5E7EB; border-radius: 10px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; margin-top: 16px; transition: background-color 0.2s; text-decoration: none; }
+        .google-btn:hover { background-color: #F9FAFB; }
+        .or-divider { margin: 16px 0; color: #475569; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 8px; }
+        .or-divider::before, .or-divider::after { content: ''; flex: 1; height: 1px; background-color: #1E293B; }
+        .footer-text { font-size: 12px; color: #94A3B8; margin-top: 24px; }
+        .footer-link { color: #FACC15; text-decoration: none; font-weight: 600; }
+        .footer-link:hover { text-decoration: underline; }
+        .alert-error { background-color: rgba(244, 63, 94, 0.1); color: #FB7185; border: 1px solid rgba(244, 63, 94, 0.2); padding: 10px; border-radius: 8px; font-size: 12px; margin-bottom: 16px; }
+    </style>
+</head>
+<body>
+    <div class="login-card">
+        <span class="logo">🎫</span>
+        <h2>Yangi Profil Ochish</h2>
+        <p class="subtitle">Bir zumda ro'yxatdan o'ting va joy tanlang</p>
+
+        {% if error %}
+        <div class="alert-error">{{ error }}</div>
+        {% endif %}
+
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ next }}">
+            <div class="form-group">
+                <label>Foydalanuvchi nomi</label>
+                <input type="text" name="username" required placeholder="User123">
+            </div>
+            <div class="form-group">
+                <label>Email Pochta</label>
+                <input type="email" name="email" required placeholder="example@pochta.uz">
+            </div>
+            <div class="form-group">
+                <label>Parol</label>
+                <input type="password" name="password" required placeholder="••••••••">
+            </div>
+            <button type="submit" class="submit-btn">Profilni Yaratish</button>
+        </form>
+
+        <div class="or-divider">Yoki</div>
+
+        <a href="{% provider_login_url 'google' next=next %}" class="google-btn">
+            <svg style="width: 16px; height: 16px;" viewBox="0 0 24 24">
+                <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.69c-.29 1.5-1.14 2.78-2.42 3.63v3.02h3.91c2.28-2.1 3.57-5.19 3.57-8.5z"/>
+                <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.91-3.02c-1.08.73-2.48 1.16-4.02 1.16-3.09 0-5.72-2.09-6.65-4.91H1.31v3.13C3.29 22.35 7.39 24 12 24z"/>
+                <path fill="#FBBC05" d="M5.35 14.32c-.24-.73-.38-1.5-.38-2.32s.14-1.59.38-2.32V6.55H1.31C.48 8.19 0 10.01 0 12s.48 3.81 1.31 5.45l4.04-3.13z"/>
+                <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.43-3.43C17.95 1.19 15.24 0 12 0 7.39 0 3.29 1.65 1.31 4.75l4.04 3.13c.93-2.82 3.56-4.91 6.65-4.91z"/>
+            </svg>
+            Google bilan ro'yxatdan o'tish
+        </a>
+        <p class="footer-text">Akkountingiz bormi? <a href="{% url 'login' %}?next={{ next }}" class="footer-link">Kirish</a></p>
+    </div>
+</body>
+</html>

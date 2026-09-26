@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Istiqlol Stadium — Admin Panel</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #0A0F1D; color: #F8FAFC; min-height: 100vh; display: flex; }
+
+        .sidebar { width: 260px; min-width: 260px; background-color: #131B2E; border-right: 1px solid #1E293B; padding: 24px; display: flex; flex-direction: column; gap: 8px; }
+        .sidebar-brand { font-size: 20px; font-weight: 900; color: #FACC15; margin-bottom: 32px; display: flex; align-items: center; gap: 8px; }
+        .sidebar-link { display: block; padding: 12px 16px; color: #94A3B8; text-decoration: none; font-size: 13px; font-weight: 600; border-radius: 10px; transition: all 0.2s; }
+        .sidebar-link.active { background-color: rgba(250, 204, 21, 0.1); color: #FACC15; border: 1px solid rgba(250, 204, 21, 0.2); }
+        .sidebar-link:hover:not(.active) { background-color: #1E293B; color: #FFFFFF; }
+
+        .main-content { flex: 1; padding: 40px; overflow-y: auto; }
+        .header-section { margin-bottom: 32px; }
+        .header-title { font-size: 24px; font-weight: 800; color: #FFFFFF; }
+        .header-subtitle { font-size: 13px; color: #94A3B8; margin-top: 4px; }
+
+        .dashboard-grid { display: grid; grid-template-columns: 2fr 1fr; gap: 32px; }
+        @media (max-width: 1024px) { .dashboard-grid { grid-template-columns: 1fr; } }
+
+        .card { background-color: #131B2E; border: 1px solid #1E293B; border-radius: 16px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        .card-title { font-size: 16px; font-weight: 700; color: #FACC15; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
+
+        .form-group { margin-bottom: 20px; }
+        label { display: block; font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; }
+        input[type="text"], textarea, input[type="datetime-local"] { width: 100%; background-color: #0A0F1D; border: 1px solid #1E293B; border-radius: 10px; padding: 12px 16px; color: white; font-size: 14px; transition: border-color 0.2s; }
+        input:focus, textarea:focus { outline: none; border-color: #FACC15; }
+
+        .sector-list { display: flex; flex-direction: column; gap: 12px; max-height: 380px; overflow-y: auto; padding-right: 4px; margin-top: 16px; }
+        .sector-row { display: flex; justify-content: space-between; align-items: center; background-color: #0A0F1D; padding: 10px 16px; border-radius: 10px; border: 1px solid #1E293B; }
+        .sector-name { font-size: 13px; font-weight: 700; color: #E2E8F0; }
+        .sector-price-box { width: 100px; }
+        .sector-price-box input { padding: 6px 10px; text-align: right; font-family: monospace; font-size: 12px; }
+
+        .submit-btn { width: 100%; background-color: #FACC15; color: #0A0F1D; font-weight: 800; padding: 16px; border: none; border-radius: 12px; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; transition: all 0.2s; margin-top: 24px; }
+        .submit-btn:hover:not(:disabled) { background-color: #EAB308; box-shadow: 0 4px 20px rgba(250, 204, 21, 0.2); }
+        .submit-btn:disabled { background-color: #1E293B; color: #475569; cursor: not-allowed; }
+
+        .alert-box { padding: 16px; border-radius: 10px; font-size: 13px; margin-bottom: 24px; display: none; }
+        .alert-success { background-color: rgba(52, 211, 153, 0.1); color: #34D399; border: 1px solid rgba(52, 211, 153, 0.2); }
+        .alert-error { background-color: rgba(244, 63, 94, 0.1); color: #FB7185; border: 1px solid rgba(244, 63, 94, 0.2); }
+
+        .group-tag { font-size: 12px; display: flex; justify-content: space-between; margin-bottom: 8px; padding-bottom: 8px; border-b: 1px solid #1E293B; border-bottom: 1px solid #1E293B; }
+        .text-yellow { color: #FACC15; } .text-emerald { color: #34D399; } .text-blue { color: #60A5FA; } .text-slate { color: #94A3B8; }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-brand">🏟️ ISTIQLOL ADMIN</div>
+        <a href="#" class="sidebar-link active">📊 Boshqaruv oynasi</a>
+        <a href="{% url 'home' %}" class="sidebar-link">← Saytga qaytish</a>
+    </div>
+
+    <div class="main-content">
+        <div class="header-section">
+            <h2 class="header-title">Yangi uchrashuv yaratish</h2>
+            <p class="header-subtitle">Sektorlar toifasiga qarab chiptalarni ommaviy zaxiralash boshqaruvi.</p>
+        </div>
+
+        <div id="alert-box" class="alert-box"></div>
+
+        <form id="create-event-form" onsubmit="submitNewEvent(event)" class="dashboard-grid">
+            {% csrf_token %}
+
+            <div class="card">
+                <div class="card-title">📝 Uchrashuv tafsilotlari</div>
+
+                <div class="form-group">
+                    <label>Uchrashuv nomi</label>
+                    <input type="text" id="event-title" required placeholder="Masalan: Neftchi vs Navbahor">
+                </div>
+
+                <div class="form-group">
+                    <label>Qo'shimcha izoh</label>
+                    <textarea id="event-desc" rows="4" placeholder="Chiptalar sotuvi cheklangan, vodiy derbisi..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>O'yin o'tkazilish vaqti (Kalendardan tanlang)</label>
+                    <input type="datetime-local" id="event-date" required>
+                </div>
+
+                <button type="submit" id="submit-btn" class="submit-btn">🚀 Chiptalarni sotuvga chiqarish</button>
+            </div>
+
+            <div class="card">
+                <div class="card-title">🎫 Sektor Toifalari & Narxlari</div>
+
+                <div style="font-size: 12px; color: #64748B; margin-bottom: 16px;">Baza narxlari avtomatik guruhlangan. To'g'ridan-to'g'ri o'zgartirishingiz mumkin:</div>
+
+                <div class="group-tag"><span class="text-yellow">■ Darvozalar orti (1-8)</span> <b class="text-yellow">30 000 UZS</b></div>
+                <div class="group-tag"><span class="text-emerald">■ Markaziy / VIP (9-16)</span> <b class="text-emerald">50 000 UZS</b></div>
+                <div class="group-tag"><span class="text-blue">■ Fan-Club (17-24)</span> <b class="text-blue">40 000 UZS</b></div>
+                <div class="group-tag"><span class="text-slate">■ To'q kulrang (25-32)</span> <b class="text-slate">45 000 UZS</b></div>
+
+                <div class="sector-list" id="sector-inputs-wrapper">
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <script>
+        function loadConfigData() {
+            const wrapper = document.getElementById('sector-inputs-wrapper');
+            wrapper.innerHTML = '';
+
+            for (let i = 1; i <= 32; i++) {
+                let defaultPrice = 45000;
+                if (i >= 1 && i <= 8) defaultPrice = 30000;
+                else if (i >= 9 && i <= 16) defaultPrice = 50000;
+                else if (i >= 17 && i <= 24) defaultPrice = 40000;
+
+                wrapper.innerHTML += `
+                    <div class="sector-row">
+                        <span class="sector-name">${i}-sektor</span>
+                        <div class="sector-price-box">
+                            <input type="text" class="sector-price-input" data-sector="${i}-sektor" value="${defaultPrice}">
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        loadConfigData();
+
+        async function submitNewEvent(event) {
+            event.preventDefault();
+            const btn = document.getElementById('submit-btn');
+            const alertBox = document.getElementById('alert-box');
+
+            btn.disabled = true;
+            btn.innerText = "⏳ 20 000 ta chipta generatsiya qilinmoqda...";
+
+            const title = document.getElementById('event-title').value;
+            const description = document.getElementById('event-desc').value;
+            let date = document.getElementById('event-date').value;
+
+            if (date && date.includes('T')) {
+                date = date.replace('T', ' ');
+            }
+
+            const sector_prices = {};
+            document.querySelectorAll('.sector-price-input').forEach(input => {
+                const sectorName = input.getAttribute('data-sector');
+                sector_prices[sectorName] = parseFloat(input.value) || 0;
+            });
+
+            const csrfTokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            const csrfToken = csrfTokenInput ? csrfTokenInput.value : '';
+
+            try {
+                const response = await fetch('/api/admin-dashboard/events/create/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': csrfToken
+                    },
+                    body: JSON.stringify({ title, description, date, sector_prices })
+                });
+
+                alertBox.style.display = 'block';
+                if (response.ok) {
+                    alertBox.className = "alert-box alert-success";
+                    alertBox.innerText = `🎉 Muvaffaqiyatli: Istiqlol stadionida ${title} uchrashuvi uchun 20 000 ta chipta PostgreSQL bazasida muvaffaqiyatli yaratildi!`;
+
+                    document.getElementById('create-event-form').reset();
+                    if (typeof loadConfigData === 'function') loadConfigData(); // Ekranni boshlang'ich narxlarga qaytaramiz
+                } else {
+                    alertBox.className = "alert-box alert-error";
+                    alertBox.innerText = "❌ Xatolik yuz berdi. Backend jadvallarini va o'yin vaqtini tekshiring.";
+                }
+            } catch (error) {
+                alertBox.style.display = 'block';
+                alertBox.className = "alert-box alert-error";
+                alertBox.innerText = `❌ Tarmoq xatoligi: ${error.message}`;
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "🚀 Chiptalarni sotuvga chiqarish";
+                setTimeout(() => { alertBox.style.display = 'none'; }, 8000);
+            }
+        }
+    </script>
+</body>
+</html>

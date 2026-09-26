@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stadion Kirish Nazorati — Skaner Terminali</title>
+    <script src="https://unpkg.com"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #0A0F1D; color: #F8FAFC; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; }
+
+        .scanner-card { background-color: #131B2E; border: 1px solid #1E293B; border-radius: 24px; width: 100%; max-width: 460px; padding: 32px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.6); text-align: center; position: relative; }
+        .badge { background-color: rgba(250, 204, 21, 0.1); color: #FACC15; border: 1px solid rgba(250, 204, 21, 0.2); padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: inline-block; margin-bottom: 20px; }
+
+        h2 { font-size: 22px; font-weight: 900; color: #FFFFFF; letter-spacing: 0.5px; }
+        .xodim-name { font-size: 12px; color: #64748B; margin-top: 4px; margin-bottom: 24px; }
+        .xodim-name strong { color: #38BDF8; }
+
+        #reader { width: 100%; background: #0A0F1D; border-radius: 16px; overflow: hidden; border: 2px solid #1E293B; margin-bottom: 24px; }
+        #reader__dashboard_section_csr { padding: 12px !important; }
+        button { background-color: #1E293B !important; color: white !important; border: 1px solid #334155 !important; padding: 10px 20px !important; border-radius: 8px !important; font-weight: bold !important; cursor: pointer !important; }
+        button:hover { background-color: #334155 !important; }
+
+        .result-box { padding: 20px; border-radius: 14px; font-size: 14px; font-weight: bold; display: none; text-align: left; line-height: 1.5; box-shadow: 0 10px 20px rgba(0,0,0,0.2); }
+        .success { background-color: rgba(16, 185, 129, 0.1); color: #34D399; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .error { background-color: rgba(239, 68, 68, 0.1); color: #F87171; border: 1px solid rgba(239, 68, 68, 0.2); }
+
+        .logout-btn { display: block; margin-top: 24px; color: #64748B; font-size: 12px; text-decoration: none; font-weight: 600; }
+        .logout-btn:hover { color: #F87171; text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <div class="scanner-card">
+        <div class="badge">📡 GATE CONTROL TERMINAL</div>
+        <h2>Darvoza Nazorati</h2>
+        <p class="xodim-name">Nazoratchi: <strong>{{ request.user.username }}</strong></p>
+
+        <div id="reader"></div>
+
+        <div id="result" class="result-box"></div>
+
+        <a href="{% url 'logout' %}" class="logout-btn">🔴 Terminaldan chiqish</a>
+    </div>
+
+    <script>
+        let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 240 });
+
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playBeep(type) {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            if (type === 'success') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(880, audioCtx.currentTime); // Chiroyli baland ovoz
+                gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.15);
+            } else if (type === 'error') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(220, audioCtx.currentTime); // To'q, qat'iy xavf ovozi
+                gain.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.4);
+            }
+        }
+
+        async function onScanSuccess(decodedText, decodedResult) {
+            html5QrcodeScanner.clear();
+
+            const resultBox = document.getElementById('result');
+            resultBox.style.display = 'block';
+            resultBox.className = "result-box success";
+            resultBox.innerHTML = "⏳ Chipta bazadan tekshirilmoqda...";
+
+            try {
+                const response = await fetch('/api/tickets/check-qr/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ ticket_uid: decodedText })
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.status === 'success') {
+                    playBeep('success');
+                    resultBox.className = "result-box success";
+                    resultBox.innerHTML = `🟩 RUXSAT BERILDI!<br><br>⚽ O'yin: ${data.event}<br>💺 Joy: ${data.seat}`;
+                } else {
+                    playBeep('error');
+                    resultBox.className = "result-box error";
+                    resultBox.innerHTML = `❌ KIRISH TAQIQLANADI!<br><br>⚠️ Sabab: ${data.message || data.error}`;
+                }
+            } catch (err) {
+                playBeep('error');
+                resultBox.className = "result-box error";
+                resultBox.innerHTML = `❌ Tarmoq xatoligi: Backend ulanishini tekshiring.`;
+            }
+
+            setTimeout(() => {
+                resultBox.style.display = 'none';
+                html5QrcodeScanner.render(onScanSuccess);
+            }, 4000);
+        }
+
+    </script>
+</body>
+</html>

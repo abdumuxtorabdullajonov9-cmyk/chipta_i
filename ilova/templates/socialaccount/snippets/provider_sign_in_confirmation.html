@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Autentifikatsiya Tasdiqlash</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #0A0F1D; color: #F8FAFC; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .confirm-card { background-color: #131B2E; border: 1px solid #1E293B; padding: 32px; border-radius: 16px; width: 100%; max-width: 400px; box-shadow: 0 20px 40px rgba(0,0,0,0.5); text-align: center; }
+        .google-icon { width: 48px; height: 48px; margin-bottom: 16px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { transform: scale(1); } 50% { transform: scale(1.05); } 100% { transform: scale(1); } }
+        h2 { font-size: 20px; font-weight: 800; color: #FACC15; margin-bottom: 8px; }
+        .subtitle { font-size: 13px; color: #94A3B8; line-height: 1.5; margin-bottom: 24px; }
+
+        .btn-container { display: flex; flex-direction: column; gap: 12px; }
+        .continue-btn { width: 100%; background-color: #FACC15; color: #0A0F1D; font-weight: 700; padding: 14px; border: none; border-radius: 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; transition: background-color 0.2s; text-decoration: none; display: block; }
+        .continue-btn:hover { background-color: #EAB308; box-shadow: 0 0 15px rgba(250, 204, 21, 0.2); }
+
+        .cancel-link { font-size: 12px; color: #64748B; text-decoration: none; font-weight: 500; transition: color 0.2s; margin-top: 14px; display: inline-block; }
+        .cancel-link:hover { color: #FB7185; text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+    <div class="confirm-card">
+        <svg class="google-icon" viewBox="0 0 24 24">
+            <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v3.92h6.69c-.29 1.5-1.14 2.78-2.42 3.63v3.02h3.91c2.28-2.1 3.57-5.19 3.57-8.5z"/>
+            <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.91-3.02c-1.08.73-2.48 1.16-4.02 1.16-3.09 0-5.72-2.09-6.65-4.91H1.31v3.13C3.29 22.35 7.39 24 12 24z"/>
+            <path fill="#FBBC05" d="M5.35 14.32c-.24-.73-.38-1.5-.38-2.32s.14-1.59.38-2.32V6.55H1.31C.48 8.19 0 10.01 0 12s.48 3.81 1.31 5.45l4.04-3.13z"/>
+            <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.43-3.43C17.95 1.19 15.24 0 12 0 7.39 0 3.29 1.65 1.31 4.75l4.04 3.13c.93-2.82 3.56-4.91 6.65-4.91z"/>
+        </svg>
+
+        <h2>Xavfsiz Tizimga Kirish</h2>
+        <p class="subtitle">Google uchinchi tomon tarmoq hisobingiz orqali platformaga xavfsiz ulanishni tasdiqlang.</p>
+
+        <form method="post" class="btn-container">
+            {% csrf_token %}
+            <button type="submit" class="continue-btn">Davom etish</button>
+        </form>
+
+        <a href="{% url 'login' %}" class="cancel-link">Orqaga qaytish / Bekor qilish</a>
+    </div>
+
+</body>
+</html>

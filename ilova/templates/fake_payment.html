@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Xavfsiz To'lov Tizimi — Istiqlol Stadium</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #0A0F1D; color: #F8FAFC; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
+        .payment-card { background-color: #131B2E; border: 1px solid #1E293B; padding: 32px; border-radius: 20px; width: 100%; max-width: 420px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); text-align: center; }
+        .bank-badge { background-color: rgba(250, 204, 21, 0.1); color: #FACC15; padding: 6px 12px; border-radius: 20px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: inline-block; margin-bottom: 20px; }
+        h2 { font-size: 22px; font-weight: 800; color: #FFFFFF; margin-bottom: 8px; }
+        .amount-box { background-color: #0A0F1D; border: 1px solid #1E293B; padding: 16px; border-radius: 12px; margin: 20px 0; }
+        .amount-label { font-size: 11px; color: #64748B; text-transform: uppercase; font-weight: 700; }
+        .amount-value { font-size: 24px; font-weight: 900; color: #FACC15; margin-top: 4px; }
+
+        .form-group { text-align: left; margin-bottom: 18px; }
+        label { display: block; font-size: 10px; font-weight: 700; color: #64748B; text-transform: uppercase; margin-bottom: 6px; }
+        input { width: 100%; background-color: #0A0F1D; border: 1px solid #1E293B; border-radius: 10px; padding: 12px 16px; color: white; font-size: 14px; }
+        input:focus { outline: none; border-color: #FACC15; }
+
+        .pay-btn { width: 100%; background-color: #FACC15; color: #0A0F1D; font-weight: 800; padding: 14px; border: none; border-radius: 12px; font-size: 14px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; margin-top: 10px; }
+        .pay-btn:hover { background-color: #EAB308; box-shadow: 0 4px 15px rgba(250, 204, 21, 0.2); }
+    </style>
+</head>
+<body>
+
+           <div class="amount-box">
+            <span class="amount-label">Sinov uchun to'lov miqdori</span>
+            <div class="amount-value">1 000 UZS</div>
+        </div>
+
+        <a href="{{ bank_url }}" target="_blank" onclick="verifyLivePayment()" class="pay-btn" style="display: block; width: 100%; background-color: #FACC15; color: #0A0F1D; text-decoration: none; font-weight: 800; padding: 16px; border-radius: 12px; font-size: 14px; text-transform: uppercase; text-align: center; box-shadow: 0 4px 15px rgba(250, 204, 21, 0.3);">
+            💳 KARTADAN REAL PUL TO'LASH
+        </a>
+
+        <form method="POST" action="" id="live-payment-form" style="display: none;">
+            {% csrf_token %}
+        </form>
+
+    <script>
+        function verifyLivePayment() {
+            alert("💬 Rasmiy bank sahifasi ochilmoqda. Kartangiz orqali 1000 so'm to'lovni tasdiqlang. To'lov tugagach, ushbu saytga qaytib 'OK' tugmasini bosing!");
+            setTimeout(() => {
+                document.getElementById('live-payment-form').submit();
+            }, 2500);
+        }
+    </script>
+
+        <form method="POST" action="">
+            {% csrf_token %}
+            <div class="form-group">
+                <label>Plastik karta raqami</label>
+                <input type="text" required placeholder="8600 •••• •••• ••••" value="8600 1492 4588 7521">
+            </div>
+            <div class="form-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div>
+                    <label>Amal qilish muddati</label>
+                    <input type="text" required placeholder="OO/YY" value="12/29">
+                </div>
+                <div>
+                    <label>SMS Kod</label>
+                    <input type="text" required placeholder="••••" value="7754">
+                </div>
+            </div>
+            <button type="submit" class="pay-btn">✅ To'lovni tasdiqlash</button>
+        </form>
+    </div>
+
+</body>
+</html>

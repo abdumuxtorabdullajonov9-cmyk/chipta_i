@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mening Rasmiy Chiptalarim</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: #0A0F1D; color: #F8FAFC; min-height: 100vh; padding: 40px 20px; }
+        .container { max-width: 800px; margin: 0 auto; width: 100%; }
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 32px; padding-bottom: 16px; border-bottom: 1px solid #1E293B; }
+        h1 { font-size: 22px; font-weight: 800; color: #FFFFFF; display: flex; align-items: center; gap: 8px; }
+        .back-link { font-size: 13px; color: #FACC15; text-decoration: none; font-weight: 600; }
+        .back-link:hover { text-decoration: underline; }
+
+        .tickets-list { display: flex; flex-direction: column; gap: 24px; margin-top: 20px; }
+        .ticket-card { background-color: #131B2E; border: 1px solid #1E293B; border-radius: 20px; padding: 24px; display: flex; justify-content: space-between; align-items: center; gap: 24px; box-shadow: 0 15px 35px -5px rgba(0,0,0,0.4); }
+        @media (max-width: 650px) { .ticket-card { flex-direction: column; align-items: flex-start; } .qr-section { width: 100%; display: flex; flex-direction: column; align-items: center; } }
+
+        .ticket-info { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+        .ticket-badge { background-color: rgba(250, 204, 21, 0.1); color: #FACC15; border: 1px solid rgba(250, 204, 21, 0.2); padding: 4px 8px; border-radius: 6px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; width: fit-content; }
+        .event-title { font-size: 20px; font-weight: 800; color: #FFFFFF; line-height: 1.2; }
+
+        .seat-coords { display: flex; gap: 16px; background-color: #0A0F1D; border: 1px solid #1E293B; padding: 12px 20px; border-radius: 12px; margin-top: 4px; }
+        .coord-item { font-size: 13px; color: #94A3B8; }
+        .coord-item strong { color: #FFFFFF; font-weight: 800; }
+        .coord-item strong.yellow { color: #FACC15; }
+
+        .ticket-uid { font-family: monospace; font-size: 11px; color: #475569; margin-top: 4px; }
+
+        .qr-section { text-align: center; display: flex; flex-direction: column; gap: 12px; }
+        .qr-wrapper { background: white; padding: 10px; border-radius: 12px; width: 140px; height: 140px; display: flex; align-items: center; justify-content: center; margin: 0 auto; }
+        .pdf-btn { background: #FACC15; color: #0A0F1D; text-decoration: none; font-size: 11px; font-weight: bold; padding: 10px 16px; border-radius: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: inline-block; transition: background 0.2s; }
+        .pdf-btn:hover { background: #EAB308; }
+        .empty-card { text-align: center; padding: 48px; background-color: #131B2E; border: 1px solid #1E293B; border-radius: 16px; font-size: 14px; color: #64748B; margin-top: 40px; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1><span>🎟️</span> Mening Elektron Chiptalarim</h1>
+            <a href="{% url 'home' %}" class="back-link">← Bosh sahifaga qaytish</a>
+        </header>
+
+        <div class="tickets-list">
+            {% for ticket in tickets %}
+                <div class="ticket-card">
+
+                    <div class="ticket-info">
+                        <span class="ticket-badge">Rasmiy Chipta</span>
+                        <h2 class="event-title">{{ ticket.event_seat.event.title }}</h2>
+
+                        <div class="seat-coords">
+                            <div class="coord-item">Sektor: <strong class="yellow">{{ ticket.event_seat.seat.sector.name }}</strong></div>
+                            <div class="coord-item">Qator: <strong>{{ ticket.event_seat.seat.row_number }}</strong></div>
+                            <div class="coord-item">O'rindiq: <strong>{{ ticket.event_seat.seat.seat_number }}</strong></div>
+                        </div>
+                        <div class="ticket-uid">UID: {{ ticket.ticket_uid }}</div>
+                    </div>
+
+                    <div class="qr-section">
+                        <div class="qr-wrapper">
+
+                            {% if ticket.qr_code_image %}
+                                <img src="{{ ticket.qr_code_image.url }}" alt="QR Code" style="width: 100%; height: 100%; object-fit: contain; display: block;">
+                            {% else %}
+                                <span style="color: #94A3B8; font-size: 11px; text-align: center; padding: 8px;">QR-kod hali generatsiya qilinmagan</span>
+                            {% endif %}
+                        </div>
+
+                        <a href="/api/tickets/{{ ticket.ticket_uid }}/download-pdf/" class="pdf-btn">
+                            📥 PDF Yuklab Olish
+                        </a>
+                    </div>
+
+                </div>
+            {% empty %}
+                <div class="empty-card">
+                    Sizda hali sotib olingan elektron chiptalar mavjud emas.
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+
+</body>
+</html>
