@@ -45,6 +45,7 @@
 
     <script>
         let html5QrcodeScanner = new Html5QrcodeScanner("reader", { fps: 15, qrbox: 240 });
+        html5QrcodeScanner.render(onScanSuccess);
 
         const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 

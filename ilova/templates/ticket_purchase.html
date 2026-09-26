@@ -37,6 +37,14 @@
 
         .back-stadium-btn { position: absolute; top: 16px; left: 16px; background-color: #131B2E; border: 1px solid #1E293B; color: #FACC15; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: bold; cursor: pointer; display: none; z-index: 6; }
         .back-stadium-btn:hover { background-color: #1E293B; }
+
+        canvas { touch-action: none; }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; overflow-y: auto; height: auto; min-height: 100vh; }
+            .sidebar { width: 100%; min-width: 100%; order: 2; box-shadow: none; border-right: none; border-top: 1px solid #1E293B; }
+            .canvas-container { order: 1; height: 55vh; width: 100%; flex: none; }
+        }
     </style>
 </head>
 <body data-event-id="{{ event.id }}">
@@ -356,6 +364,27 @@
             previousMousePosition = { x: e.clientX, y: e.clientY };
             drawScene();
         });
+
+        canvas.addEventListener('touchstart', (e) => {
+            if (viewMode !== 'STADIUM') return;
+            isDragging = true;
+            const touch = e.touches[0];
+            previousMousePosition = { x: touch.clientX, y: touch.clientY };
+        }, { passive: true });
+
+        window.addEventListener('touchend', () => { isDragging = false; });
+
+        canvas.addEventListener('touchmove', (e) => {
+            if (viewMode !== 'STADIUM' || !isDragging) return;
+            e.preventDefault();
+            const touch = e.touches[0];
+            const deltaX = touch.clientX - previousMousePosition.x;
+            const deltaY = touch.clientY - previousMousePosition.y;
+            rotationAngle += deltaX * 0.006;
+            pitchAngle = Math.max(0.35, Math.min(0.85, pitchAngle + deltaY * 0.003));
+            previousMousePosition = { x: touch.clientX, y: touch.clientY };
+            drawScene();
+        }, { passive: false });
 
         canvas.addEventListener('click', async (e) => {
             if (isDragging || isLoadingSeats) return;
