@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   web:
-    build: .
+    build: chipta_uz
     command: gunicorn chipta_uz.wsgi:application --bind 0.0.0.0:8000
     volumes:
       - .:/app
