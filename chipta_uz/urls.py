@@ -29,6 +29,4 @@ urlpatterns = [
     path('my-tickets/', MyTicketsView.as_view(), name='my_tickets'),
     path('orders/pay-fake/<uuid:order_id>/', FakePaymentView.as_view(), name='fake_payment'),
     path('gate-control/scanner/', GateScannerView.as_view(), name='gate_scanner'),
-]
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

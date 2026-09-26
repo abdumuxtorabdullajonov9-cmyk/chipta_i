@@ -256,13 +256,32 @@ class AdminSectorGroupConfigView(APIView):
     def post(self, request):
         name = request.data.get('name')
         color_class = request.data.get('color_class')
+        default_price = request.data.get('default_price')
         sector_ids = request.data.get('sector_ids', [])
 
-        group, _ = SectorGroup.objects.update_or_create(name=name, defaults={"color_class": color_class})
+        if not name:
+            return Response({"error": "Toifa nomi (name) majburiy!"}, status=status.HTTP_400_BAD_REQUEST)
+
+        defaults = {"color_class": color_class}
+        if default_price is not None:
+            try:
+                defaults["default_price"] = float(default_price)
+            except (TypeError, ValueError):
+                return Response({"error": "Narx noto'g'ri formatda!"}, status=status.HTTP_400_BAD_REQUEST)
+
+        group, _ = SectorGroup.objects.update_or_create(name=name, defaults=defaults)
         if sector_ids:
             StadiumSector.objects.filter(id__in=sector_ids).update(group=group)
-        return Response({"message": "Saqlandi"})
 
+        return Response({
+            "message": "Saqlandi",
+            "group": {
+                "id": group.id,
+                "name": group.name,
+                "color_class": group.color_class,
+                "default_price": float(group.default_price),
+            }
+        })
 class DownloadTicketPDFView(LoginRequiredMixin, View):
     def get(self, request, ticket_uid):
             ticket = get_object_or_404(

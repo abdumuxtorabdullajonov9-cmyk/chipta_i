@@ -102,6 +102,17 @@
                 </div>
             </div>
         </form>
+
+        <div class="card" style="margin-top: 32px;">
+            <div class="card-title">🛠️ Sektor Toifalarini Tahrirlash</div>
+            <div style="font-size: 12px; color: #64748B; margin-bottom: 16px;">
+                Bu yerdagi o'zgarishlar bazaga darhol saqlanadi va shu toifadagi barcha sektorlarga tegishli bo'ladi
+                (yangi uchrashuv yaratganda ham shu narxlar standart sifatida ishlatiladi).
+            </div>
+            <div id="group-config-wrapper" style="display: flex; flex-direction: column; gap: 12px;">
+                <div style="font-size: 12px; color: #64748B;">Yuklanmoqda...</div>
+            </div>
+        </div>
     </div>
 
     <script>
@@ -183,6 +194,88 @@
                 setTimeout(() => { alertBox.style.display = 'none'; }, 8000);
             }
         }
+
+        function getCsrfToken() {
+            const csrfTokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
+            return csrfTokenInput ? csrfTokenInput.value : '';
+        }
+
+        async function loadSectorGroups() {
+            const wrapper = document.getElementById('group-config-wrapper');
+            try {
+                const response = await fetch('/api/admin-dashboard/groups/config/');
+                if (!response.ok) throw new Error('Guruhlarni yuklab bo\'lmadi');
+                const data = await response.json();
+
+                wrapper.innerHTML = '';
+
+                if (!data.groups || data.groups.length === 0) {
+                    wrapper.innerHTML = '<div style="font-size: 12px; color: #64748B;">Hali sektor toifalari yaratilmagan.</div>';
+                    return;
+                }
+
+                data.groups.forEach(group => {
+                    const sectorNames = data.sectors
+                        .filter(s => s.group_id === group.id)
+                        .map(s => s.name + '-sektor')
+                        .join(', ');
+
+                    const row = document.createElement('div');
+                    row.className = 'sector-row';
+                    row.style.flexDirection = 'column';
+                    row.style.alignItems = 'stretch';
+                    row.style.gap = '8px';
+                    row.innerHTML = `
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="sector-name">${group.name}</span>
+                            <div class="sector-price-box">
+                                <input type="text" class="group-price-input" data-group-id="${group.id}" data-group-name="${group.name}" data-color-class="${group.color_class}" value="${group.default_price}">
+                            </div>
+                        </div>
+                        <div style="font-size: 11px; color: #64748B;">Sektorlar: ${sectorNames || 'biriktirilmagan'}</div>
+                        <button type="button" class="submit-btn" style="margin-top: 0; padding: 8px;" onclick="saveSectorGroup(${group.id}, '${group.name}', '${group.color_class}', this)">💾 Saqlash</button>
+                    `;
+                    wrapper.appendChild(row);
+                });
+            } catch (error) {
+                wrapper.innerHTML = `<div style="font-size: 12px; color: #FB7185;">❌ Xatolik: ${error.message}</div>`;
+            }
+        }
+
+        async function saveSectorGroup(groupId, groupName, colorClass, btn) {
+            const input = document.querySelector(`.group-price-input[data-group-id="${groupId}"]`);
+            const newPrice = parseFloat(input.value) || 0;
+
+            btn.disabled = true;
+            btn.innerText = '⏳ Saqlanmoqda...';
+
+            try {
+                const response = await fetch('/api/admin-dashboard/groups/config/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: JSON.stringify({
+                        name: groupName,
+                        color_class: colorClass,
+                        default_price: newPrice
+                    })
+                });
+
+                if (response.ok) {
+                    btn.innerText = '✅ Saqlandi';
+                } else {
+                    btn.innerText = '❌ Xatolik';
+                }
+            } catch (error) {
+                btn.innerText = '❌ Tarmoq xatoligi';
+            } finally {
+                setTimeout(() => { btn.disabled = false; btn.innerText = '💾 Saqlash'; }, 2000);
+            }
+        }
+
+        loadSectorGroups();
     </script>
 </body>
 </html>
